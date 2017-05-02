@@ -25,3 +25,8 @@ export GOPATH=one dir above pwd
 
 ./rtmp_client -c
 
+## Resources
+
+* https://github.com/marten-seemann/quic-conn
+* https://github.com/lucas-clemente/quic-go
+* https://github.com/zhangpeihao/gortmp
