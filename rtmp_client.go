@@ -51,15 +51,17 @@ type P struct {
 }
 
 func (handler *TestOutboundConnHandler) OnReceived(rconn rtmp.Conn, message *rtmp.Message) {
-	var data []byte
+//	var data []byte
 	switch message.Type {
 	case rtmp.VIDEO_TYPE:
 //		if flvFile != nil {
 //			flvFile.WriteVideoTag(message.Buf.Bytes(), message.AbsoluteTimestamp)
 //		}
 		//videoDataSize += int64(message.Buf.Len())
-		message.Buf.Write(data)
-		if err := enc.Encode(P{data,message.Type,message.Timestamp,message.AbsoluteTimestamp}); err != nil {
+//		message.Buf.Write(data)
+		fmt.Println(message.Buf.Len())
+//		if message.Buf.Len() <4 {fmt.Println(message.Buf.Bytes())}
+		if err := enc.Encode(P{message.Buf.Bytes(),message.Type,message.Timestamp,message.AbsoluteTimestamp}); err != nil {
 		    fmt.Println("error")
                     panic(err)
                 }
@@ -78,8 +80,10 @@ func (handler *TestOutboundConnHandler) OnReceived(rconn rtmp.Conn, message *rtm
 		//message.Buf.WriteByte(0xff)
 		//fmt.Printf("%x\n",message.Buf)
 		//message.Buf.WriteTo(conn)
-		message.Buf.Write(data)
-		if err := enc.Encode(P{data,message.Type,message.Timestamp,message.AbsoluteTimestamp}); err != nil {
+//		message.Buf.Write(data)
+		fmt.Println(message.Buf.Len())
+//		if message.Buf.Len() <4 {fmt.Println(message.Buf.Bytes())}
+		if err := enc.Encode(P{message.Buf.Bytes(),message.Type,message.Timestamp,message.AbsoluteTimestamp}); err != nil {
 		    fmt.Println(err)
                     panic(err)
                 }

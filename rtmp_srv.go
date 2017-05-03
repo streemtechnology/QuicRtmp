@@ -155,13 +155,16 @@ func main() {
 						for i := 0; i < len(s); i++ {
 							fmt.Println("sending old packs")
 							msg = s[i]
+							fmt.Println(len(msg.Buf))
 							if err = str.PublishData(msg.Type, msg.Buf, msg.Timestamp); err != nil {
 								fmt.Println("PublishData() error:", err)
 							}
 						}
 						s = nil
 					}else{
-						if err = str.PublishData(msg.Type, msg.Buf, msg.Timestamp); err != nil {
+//						if len(msg.Buf)< 4 {fmt.Println(msg.Buf)}
+						fmt.Println(len(msg.Buf))
+						if err = str.PublishData(msg.Type, msg.Buf,msg.Timestamp); err != nil {
 							fmt.Println("PublishData() error:", err)
 						}
 					}
