@@ -60,7 +60,6 @@ func (handler *TestOutboundConnHandler) OnReceived(rconn rtmp.Conn, message *rtm
 		//videoDataSize += int64(message.Buf.Len())
 //		message.Buf.Write(data)
 		fmt.Println(message.Buf.Len())
-//		if message.Buf.Len() <4 {fmt.Println(message.Buf.Bytes())}
 		if err := enc.Encode(P{message.Buf.Bytes(),message.Type,message.Timestamp,message.AbsoluteTimestamp}); err != nil {
 		    fmt.Println("error")
                     panic(err)
@@ -82,7 +81,6 @@ func (handler *TestOutboundConnHandler) OnReceived(rconn rtmp.Conn, message *rtm
 		//message.Buf.WriteTo(conn)
 //		message.Buf.Write(data)
 		fmt.Println(message.Buf.Len())
-//		if message.Buf.Len() <4 {fmt.Println(message.Buf.Bytes())}
 		if err := enc.Encode(P{message.Buf.Bytes(),message.Type,message.Timestamp,message.AbsoluteTimestamp}); err != nil {
 		    fmt.Println(err)
                     panic(err)

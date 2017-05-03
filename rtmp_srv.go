@@ -130,7 +130,6 @@ func main() {
 			}
 			fmt.Println("c")
 			dec := gob.NewDecoder(conn)
-			var msg P
                         for {
 				select{
 				case stream := <-createStreamChan:
@@ -147,6 +146,7 @@ func main() {
                                 //}
                                 //fmt.Println("Message from client: ", len(string(message)))
 				default:
+				var msg P
 				if err := dec.Decode(&msg); err != nil {
 				    panic(err)
 				}
@@ -162,7 +162,6 @@ func main() {
 						}
 						s = nil
 					}else{
-//						if len(msg.Buf)< 4 {fmt.Println(msg.Buf)}
 						fmt.Println(len(msg.Buf))
 						if err = str.PublishData(msg.Type, msg.Buf,msg.Timestamp); err != nil {
 							fmt.Println("PublishData() error:", err)
