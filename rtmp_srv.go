@@ -81,7 +81,6 @@ func main() {
         if *startServer {
                 // start the server
                 go func() {
-			s := make([]P, 0)
                         certPath := flag.String("certpath", "/etc/letsencrypt/live/streemtechnology.com", "certificate directory")
                         certFile := *certPath + "/fullchain.pem"
                         keyFile := *certPath + "/privkey.pem"
@@ -99,10 +98,6 @@ func main() {
                         if err != nil {
                                 panic(err)
                         }
-			//rconn, err := net.Dial("tcp", "")
-			//if err != nil {
-			//	panic(err)	// handle error
-			//}
 
                         fmt.Println("Waiting for incoming connection")
                         conn, err := ln.Accept()
@@ -130,51 +125,34 @@ func main() {
 			}
 			fmt.Println("c")
 			dec := gob.NewDecoder(conn)
+			stream:= <-createStreamChan
+			stream.Attach(testHandler)
+			err = stream.Publish(*streamName, "live")
+                        if err != nil {
+                            fmt.Printf("Publish error: %s", err.Error())
+                            os.Exit(-1)
+                        }
+			startTs := uint32(0)
+			diff1 := uint32(0)
                         for {
-				select{
-				case stream := <-createStreamChan:
-					// Publish
-					stream.Attach(testHandler)
-					err = stream.Publish(*streamName, "live")
-					if err != nil {
-						fmt.Printf("Publish error: %s", err.Error())
-						os.Exit(-1)
-					}
-                                //message, err := bufio.NewReader(conn).ReadString(0xff)
-                                //if err != nil {
-                                //        panic(err)
-                                //}
-                                //fmt.Println("Message from client: ", len(string(message)))
-				default:
 				var msg P
 				if err := dec.Decode(&msg); err != nil {
+				    fmt.Println(err)
 				    panic(err)
 				}
 				if str != nil {
-					if len(s) >0 && s != nil {
-						for i := 0; i < len(s); i++ {
-							fmt.Println("sending old packs")
-							msg = s[i]
-							fmt.Println(len(msg.Buf))
-							if err = str.PublishData(msg.Type, msg.Buf, msg.Timestamp); err != nil {
-								fmt.Println("PublishData() error:", err)
-							}
-						}
-						s = nil
-					}else{
-						fmt.Println(len(msg.Buf))
-						if err = str.PublishData(msg.Type, msg.Buf,msg.Timestamp); err != nil {
-							fmt.Println("PublishData() error:", err)
-						}
+					if startTs == uint32(0) {
+						startTs = msg.Timestamp
+					}
+					if msg.Timestamp+diff1 > diff1 {
+						diff1 = msg.Timestamp + diff1
+					}
+					fmt.Println(msg.Type, len(msg.Buf),  msg.Timestamp ,diff1)
+					if err = str.PublishData(msg.Type, msg.Buf  , 0); err != nil {
+						fmt.Println("PublishData() error:", err)
 					}
 				}else{
-					s = append(s, msg)
-					fmt.Println("nope")
-				}
-				//fmt.Println(msg.Type)
-                                // echo back
-                                //newmessage := strings.ToUpper(message)
-                                //conn.Write([]byte(newmessage + "\n"))
+					fmt.Println("nope can't publish",msg)
 				}
                         }
                 }()

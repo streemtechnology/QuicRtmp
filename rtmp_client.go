@@ -30,8 +30,8 @@ var network bytes.Buffer
 var enc *gob.Encoder
 
 var (
-	url        *string = flag.String("URL", "rtmp://188.138.17.8:1935/albuk", "The rtmp url to connect.")
-	streamName *string = flag.String("Stream", "albuk.stream", "Stream name to play.")
+	url        *string = flag.String("URL", "rtmp://84.20.77.50/live", "The rtmp url to connect.")
+	streamName *string = flag.String("Stream", "livestream1", "Stream name to play.")
 )
 
 func (handler *TestOutboundConnHandler) OnStatus(conn rtmp.OutboundConn) {
@@ -51,42 +51,27 @@ type P struct {
 }
 
 func (handler *TestOutboundConnHandler) OnReceived(rconn rtmp.Conn, message *rtmp.Message) {
-//	var data []byte
 	switch message.Type {
 	case rtmp.VIDEO_TYPE:
 //		if flvFile != nil {
 //			flvFile.WriteVideoTag(message.Buf.Bytes(), message.AbsoluteTimestamp)
 //		}
-		//videoDataSize += int64(message.Buf.Len())
-//		message.Buf.Write(data)
-		fmt.Println(message.Buf.Len())
+		videoDataSize += int64(message.Buf.Len())
+//		fmt.Println("**",message.Buf.Len())
 		if err := enc.Encode(P{message.Buf.Bytes(),message.Type,message.Timestamp,message.AbsoluteTimestamp}); err != nil {
 		    fmt.Println("error")
                     panic(err)
                 }
-		//fmt.Println(network.Len())
-		//network.WriteTo(conn)
-		//fmt.Println(message.Buf.Len())
-		//fmt.Printf("%x\n",message.Buf)
-		//message.Buf.WriteTo(conn)
 	case rtmp.AUDIO_TYPE:
 //		if flvFile != nil {
 //			flvFile.WriteAudioTag(message.Buf.Bytes(), message.AbsoluteTimestamp)
 //		}
 		audioDataSize += int64(message.Buf.Len())
-		//conn.Write(message.Buf)
-		//fmt.Println(message.Buf.Len())
-		//message.Buf.WriteByte(0xff)
-		//fmt.Printf("%x\n",message.Buf)
-		//message.Buf.WriteTo(conn)
-//		message.Buf.Write(data)
-		fmt.Println(message.Buf.Len())
+//		fmt.Println("**",message.Buf.Len())
 		if err := enc.Encode(P{message.Buf.Bytes(),message.Type,message.Timestamp,message.AbsoluteTimestamp}); err != nil {
 		    fmt.Println(err)
                     panic(err)
                 }
-		//network.WriteTo(conn)
-		//fmt.Println(network.Len())
 	}
 
 }
