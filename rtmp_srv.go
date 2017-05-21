@@ -1,25 +1,24 @@
 package main
 
 import (
-        //"bufio"
-        "crypto/tls"
-        "flag"
-        "fmt"
-        //"strings"
-	"time"
+	//"bufio"
+	"crypto/tls"
+	"flag"
+	"fmt"
+	//"strings"
 	"encoding/gob"
+	"time"
 
 	//"net"
-	"os"
+	quicconn "github.com/marten-seemann/quic-conn"
 	rtmp "github.com/zhangpeihao/gortmp"
-        quicconn "github.com/marten-seemann/quic-conn"
+	"os"
 )
 
 var obConn rtmp.OutboundConn
 var createStreamChan chan rtmp.OutboundStream
 var status uint
 var str rtmp.OutboundStream
-
 
 var (
 	url         *string = flag.String("URL", "rtmp://178.62.61.235:1935/show", "The rtmp url to connect.")
@@ -65,46 +64,45 @@ func (handler *TestOutboundConnHandler) OnPublishStart(stream rtmp.OutboundStrea
 }
 
 type P struct {
-        Buf []byte
-        Type uint8
-        Timestamp uint32
-        AbsoluteTimestamp uint32
+	Buf               []byte
+	Type              uint8
+	Timestamp         uint32
+	AbsoluteTimestamp uint32
 }
 
-
 func main() {
-        // utils.SetLogLevel(utils.LogLevelDebug)
+	// utils.SetLogLevel(utils.LogLevelDebug)
 
-        startServer := flag.Bool("s", false, "server")
-        flag.Parse()
+	startServer := flag.Bool("s", false, "server")
+	flag.Parse()
 
-        if *startServer {
-                // start the server
-                go func() {
-                        certPath := flag.String("certpath", "/etc/letsencrypt/live/streemtechnology.com", "certificate directory")
-                        certFile := *certPath + "/fullchain.pem"
-                        keyFile := *certPath + "/privkey.pem"
+	if *startServer {
+		// start the server
+		go func() {
+			certPath := flag.String("certpath", "/etc/letsencrypt/live/streemtechnology.com", "certificate directory")
+			certFile := *certPath + "/fullchain.pem"
+			keyFile := *certPath + "/privkey.pem"
 			var err error
-                        certs := make([]tls.Certificate, 1)
-                        certs[0], err = tls.LoadX509KeyPair(certFile, keyFile)
-                        if err != nil {
-                                panic(err)
-                        }
-                        config := &tls.Config{
-                                Certificates: certs,
-                        }
+			certs := make([]tls.Certificate, 1)
+			certs[0], err = tls.LoadX509KeyPair(certFile, keyFile)
+			if err != nil {
+				panic(err)
+			}
+			config := &tls.Config{
+				Certificates: certs,
+			}
 
-                        ln, err := quicconn.Listen("udp", ":8081", config)
-                        if err != nil {
-                                panic(err)
-                        }
+			ln, err := quicconn.Listen("udp", ":8081", config)
+			if err != nil {
+				panic(err)
+			}
 
-                        fmt.Println("Waiting for incoming connection")
-                        conn, err := ln.Accept()
-                        if err != nil {
-                                panic(err)
-                        }
-                        fmt.Println("Established connection")
+			fmt.Println("Waiting for incoming connection")
+			conn, err := ln.Accept()
+			if err != nil {
+				panic(err)
+			}
+			fmt.Println("Established connection")
 
 			createStreamChan = make(chan rtmp.OutboundStream)
 			testHandler := &TestOutboundConnHandler{}
@@ -125,20 +123,20 @@ func main() {
 			}
 			fmt.Println("c")
 			dec := gob.NewDecoder(conn)
-			stream:= <-createStreamChan
+			stream := <-createStreamChan
 			stream.Attach(testHandler)
 			err = stream.Publish(*streamName, "live")
-                        if err != nil {
-                            fmt.Printf("Publish error: %s", err.Error())
-                            os.Exit(-1)
-                        }
+			if err != nil {
+				fmt.Printf("Publish error: %s", err.Error())
+				os.Exit(-1)
+			}
 			startTs := uint32(0)
 			diff1 := uint32(0)
-                        for {
+			for {
 				var msg P
 				if err := dec.Decode(&msg); err != nil {
-				    fmt.Println(err)
-				    panic(err)
+					fmt.Println(err)
+					panic(err)
 				}
 				if str != nil {
 					if startTs == uint32(0) {
@@ -147,15 +145,15 @@ func main() {
 					if msg.Timestamp+diff1 > diff1 {
 						diff1 = msg.Timestamp + diff1
 					}
-					fmt.Println(msg.Type, len(msg.Buf),  msg.Timestamp ,diff1)
-					if err = str.PublishData(msg.Type, msg.Buf  , 0); err != nil {
+					fmt.Println(msg.Type, len(msg.Buf), msg.Timestamp, diff1)
+					if err = str.PublishData(msg.Type, msg.Buf, 0); err != nil {
 						fmt.Println("PublishData() error:", err)
 					}
-				}else{
-					fmt.Println("nope can't publish",msg)
+				} else {
+					fmt.Println("nope can't publish", msg)
 				}
-                        }
-                }()
-        }
+			}
+		}()
+	}
 	time.Sleep(time.Hour)
 }

@@ -2,27 +2,27 @@ package main
 
 import (
 	"net"
-//        "bufio"
-        "crypto/tls"
-        "flag"
-        "fmt"
-        "time"
-	"os"
+	//        "bufio"
 	"bytes"
+	"crypto/tls"
 	"encoding/gob"
-//	"strconv"
+	"flag"
+	"fmt"
+	"os"
+	"time"
+	//	"strconv"
+	quicconn "github.com/marten-seemann/quic-conn"
 	rtmp "github.com/zhangpeihao/gortmp"
-        quicconn "github.com/marten-seemann/quic-conn"
 )
 
 type TestOutboundConnHandler struct {
 }
 
-
 var obConn rtmp.OutboundConn
 var createStreamChan chan rtmp.OutboundStream
 var videoDataSize int64
 var audioDataSize int64
+
 //var flvFile *flv.File
 var status uint
 var conn net.Conn
@@ -43,35 +43,36 @@ func (handler *TestOutboundConnHandler) OnStatus(conn rtmp.OutboundConn) {
 func (handler *TestOutboundConnHandler) OnClosed(conn rtmp.Conn) {
 	fmt.Printf("@@@@@@@@@@@@@Closed\n")
 }
+
 type P struct {
-	Buf []byte
-	Type uint8
-	Timestamp uint32
+	Buf               []byte
+	Type              uint8
+	Timestamp         uint32
 	AbsoluteTimestamp uint32
 }
 
 func (handler *TestOutboundConnHandler) OnReceived(rconn rtmp.Conn, message *rtmp.Message) {
 	switch message.Type {
 	case rtmp.VIDEO_TYPE:
-//		if flvFile != nil {
-//			flvFile.WriteVideoTag(message.Buf.Bytes(), message.AbsoluteTimestamp)
-//		}
+		//		if flvFile != nil {
+		//			flvFile.WriteVideoTag(message.Buf.Bytes(), message.AbsoluteTimestamp)
+		//		}
 		videoDataSize += int64(message.Buf.Len())
-//		fmt.Println("**",message.Buf.Len())
-		if err := enc.Encode(P{message.Buf.Bytes(),message.Type,message.Timestamp,message.AbsoluteTimestamp}); err != nil {
-		    fmt.Println("error")
-                    panic(err)
-                }
+		//		fmt.Println("**",message.Buf.Len())
+		if err := enc.Encode(P{message.Buf.Bytes(), message.Type, message.Timestamp, message.AbsoluteTimestamp}); err != nil {
+			fmt.Println("error")
+			panic(err)
+		}
 	case rtmp.AUDIO_TYPE:
-//		if flvFile != nil {
-//			flvFile.WriteAudioTag(message.Buf.Bytes(), message.AbsoluteTimestamp)
-//		}
+		//		if flvFile != nil {
+		//			flvFile.WriteAudioTag(message.Buf.Bytes(), message.AbsoluteTimestamp)
+		//		}
 		audioDataSize += int64(message.Buf.Len())
-//		fmt.Println("**",message.Buf.Len())
-		if err := enc.Encode(P{message.Buf.Bytes(),message.Type,message.Timestamp,message.AbsoluteTimestamp}); err != nil {
-		    fmt.Println(err)
-                    panic(err)
-                }
+		//		fmt.Println("**",message.Buf.Len())
+		if err := enc.Encode(P{message.Buf.Bytes(), message.Type, message.Timestamp, message.AbsoluteTimestamp}); err != nil {
+			fmt.Println(err)
+			panic(err)
+		}
 	}
 
 }
@@ -86,26 +87,25 @@ func (handler *TestOutboundConnHandler) OnStreamCreated(conn rtmp.OutboundConn, 
 }
 
 func main() {
-        // utils.SetLogLevel(utils.LogLevelDebug)
+	// utils.SetLogLevel(utils.LogLevelDebug)
 
-        startClient := flag.Bool("c", false, "client")
-        flag.Parse()
+	startClient := flag.Bool("c", false, "client")
+	flag.Parse()
 
 	if *startClient {
-                // run the client
-                go func() {
+		// run the client
+		go func() {
 			var err error
-                        tlsConf := &tls.Config{}//InsecureSkipVerify: true}
-                        conn, err = quicconn.Dial("streemtechnology.com:8081", tlsConf)
-                        if err != nil {
-                                panic(err)
-                        }
+			tlsConf := &tls.Config{} //InsecureSkipVerify: true}
+			conn, err = quicconn.Dial("streemtechnology.com:8081", tlsConf)
+			if err != nil {
+				panic(err)
+			}
 			enc = gob.NewEncoder(conn)
-                        //        fmt.Fprintf(conn, message+strconv.Itoa(i)+"\n")
+			//        fmt.Fprintf(conn, message+strconv.Itoa(i)+"\n")
 			createStreamChan = make(chan rtmp.OutboundStream)
 			testHandler := &TestOutboundConnHandler{}
 			fmt.Println("to dial")
-
 
 			obConn, err = rtmp.Dial(*url, testHandler, 100)
 			if err != nil {
@@ -124,7 +124,7 @@ func main() {
 			}
 			for {
 				select {
-					case stream := <-createStreamChan:
+				case stream := <-createStreamChan:
 					// Play
 					err = stream.Play(*streamName, nil, nil, nil)
 					if err != nil {
@@ -133,12 +133,11 @@ func main() {
 					}
 
 				case <-time.After(1 * time.Second):
-//				fmt.Printf("Audio size: %d bytes; Vedio size: %d bytes\n", audioDataSize, videoDataSize)
+					//				fmt.Printf("Audio size: %d bytes; Vedio size: %d bytes\n", audioDataSize, videoDataSize)
 				}
 			}
-                }()
-        }
+		}()
+	}
 
-        time.Sleep(time.Hour)
+	time.Sleep(time.Hour)
 }
-
